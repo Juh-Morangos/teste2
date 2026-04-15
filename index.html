@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Vendas Pro v10.5 - Dashboard Exclusivo na Home</title>
+    <title>Sistema de Vendas Pro v10.6 - Numeração Sequencial</title>
     <style>
         :root { --primary: #2563eb; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f3f4f6; --text: #1f2937; --info: #0ea5e9; }
         
@@ -471,6 +471,9 @@
     <script>
         const formatCurrency = (value) => { return parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
         
+        // FUNÇÃO NOVA: Formata o ID para ter 3 dígitos (ex: 001, 015, 120)
+        const formatId = (id) => { return String(id).padStart(3, '0'); };
+
         function maskBRL(input) {
             let v = input.value.replace(/\D/g, '');
             if (!v) { input.value = ''; return; }
@@ -571,7 +574,7 @@
             tbody.innerHTML = filtradas.map(v => {
                 const dataPedStr = v.dataPedido ? v.dataPedido.split('-').reverse().join('/') : v.data.split('T')[0].split('-').reverse().join('/'); let rowStyles = v.status === 'Cancelada' ? 'background: #fff5f5;' : '';
                 let pgtoVis = v.pagamento.replace(/\|/g, '<br>').replace(/Prazo em Carteira/g, '<span style="color:#f59e0b;font-weight:bold;">Prazo</span>');
-                return `<tr style="${rowStyles}"><td style="text-align: center;"><input type="checkbox" class="check-venda" value="${v.id}" onchange="highlightRow(this)"></td><td>#${v.id}</td><td><b>${dataPedStr}</b></td><td>${v.cliente}</td><td>${v.vendedor || '-'}</td><td><b>R$ ${formatCurrency(v.total)}</b></td><td style="font-size:0.8rem;">${pgtoVis}</td><td><span class="badge ${v.status === 'Ativa' ? 'badge-success' : 'badge-danger'}">${v.status}</span></td></tr>`;
+                return `<tr style="${rowStyles}"><td style="text-align: center;"><input type="checkbox" class="check-venda" value="${v.id}" onchange="highlightRow(this)"></td><td><b>#${formatId(v.id)}</b></td><td><b>${dataPedStr}</b></td><td>${v.cliente}</td><td>${v.vendedor || '-'}</td><td><b>R$ ${formatCurrency(v.total)}</b></td><td style="font-size:0.8rem;">${pgtoVis}</td><td><span class="badge ${v.status === 'Ativa' ? 'badge-success' : 'badge-danger'}">${v.status}</span></td></tr>`;
             }).join('');
             updateDashboard(filtradas);
         }
@@ -599,7 +602,7 @@
                 } else { if(v.carrinho && v.carrinho.length > 0) { listaProdutosHtml = v.carrinho.map(item => `<b>[  ] ${item.qtd}x</b> - ${item.nome}`).join('<br><br>'); } else { listaProdutosHtml = v.itens; } }
                 const dataEmissao = v.dataPedido ? v.dataPedido.split('-').reverse().join('/') : v.data.split('T')[0].split('-').reverse().join('/');
                 
-                let html = `<div style="text-align:center"><h3 style="margin:0">${tipo === 'cliente' ? 'RECIBO DO CLIENTE' : 'ORDEM DE SEPARAÇÃO'}</h3><p style="margin:5px 0">Pedido Nº: ${v.id}</p><hr style="border-top:1px dashed #000; border-bottom:none;"></div><p style="margin:5px 0">Data: ${dataEmissao}</p><p style="margin:5px 0">Cliente: ${v.cliente}</p><p style="margin:5px 0">Vendedor: ${v.vendedor || '-'}</p><hr style="border-top:1px dashed #000; border-bottom:none;"><p style="margin:5px 0"><b>ITENS:</b><br><br>${listaProdutosHtml}</p><hr style="border-top:1px dashed #000; border-bottom:none;">`;
+                let html = `<div style="text-align:center"><h3 style="margin:0">${tipo === 'cliente' ? 'RECIBO DO CLIENTE' : 'ORDEM DE SEPARAÇÃO'}</h3><p style="margin:5px 0">Pedido Nº: ${formatId(v.id)}</p><hr style="border-top:1px dashed #000; border-bottom:none;"></div><p style="margin:5px 0">Data: ${dataEmissao}</p><p style="margin:5px 0">Cliente: ${v.cliente}</p><p style="margin:5px 0">Vendedor: ${v.vendedor || '-'}</p><hr style="border-top:1px dashed #000; border-bottom:none;"><p style="margin:5px 0"><b>ITENS:</b><br><br>${listaProdutosHtml}</p><hr style="border-top:1px dashed #000; border-bottom:none;">`;
                 
                 if (tipo === 'cliente') { 
                     if (v.acres > 0) html += `<p style="margin:5px 0">Acrescimo: R$ ${formatCurrency(v.acres)}</p>`; 
@@ -647,7 +650,7 @@
                 const dPed = v.dataPedido ? v.dataPedido.split('-').reverse().join('/') : v.data.split('T')[0].split('-').reverse().join('/');
                 html += `
                 <tr style="border-top: 2px solid #000; background: #f8fafc;">
-                    <td colspan="2" style="padding: 8px;"><b>Ped: #${v.id} &nbsp;|&nbsp; Vend: ${v.vendedor || '-'} &nbsp;|&nbsp; Data: ${dPed}</b></td>
+                    <td colspan="2" style="padding: 8px;"><b>Ped: #${formatId(v.id)} &nbsp;|&nbsp; Vend: ${v.vendedor || '-'} &nbsp;|&nbsp; Data: ${dPed}</b></td>
                     <td colspan="2" style="padding: 8px;"><b>Cliente: ${(v.clienteId || '0')} - ${v.cliente.toUpperCase()}</b></td>
                     <td style="text-align: right; padding: 8px;"><b>R$ ${formatCurrency(v.total)}</b></td>
                 </tr>
@@ -714,7 +717,7 @@
                 const isPago = v.pagamento.startsWith('Acertado'); const isVencido = !isPago && v.vencimento < hoje; let rowStyle = isPago ? 'background: #f0fdf4; opacity: 0.8;' : (isVencido ? 'background: #fef2f2;' : ''); let statusBadge = isPago ? '<span class="badge badge-success">PAGO</span>' : (isVencido ? '<span class="badge badge-danger">VENCIDO</span>' : '<span class="badge badge-warning">A VENCER</span>'); 
                 let pgtoText = isPago ? `<span style="color: #059669; font-weight: bold;">✔ ${v.pagamento.replace('Acertado (','').replace(')','')}</span>` : '-'; 
                 let valorRestante = v.total - (v.valorPago || 0); let faltaTxt = (!isPago && (v.valorPago || 0) > 0) ? `<br><span style="font-size:0.8rem; color:var(--danger)">Falta R$ ${formatCurrency(valorRestante)}</span>` : '';
-                return `<tr style="${rowStyle}"><td style="text-align: center;"><input type="checkbox" class="check-acerto" value="${v.id}" onchange="highlightRow(this)"></td><td><b>#${v.id}</b></td><td>${v.cliente}</td><td style="${isVencido ? 'color: red; font-weight: bold;' : ''}">${v.vencimento.split('-').reverse().join('/')}</td><td><b>R$ ${formatCurrency(v.total)}</b>${faltaTxt}</td><td>${statusBadge}</td><td>${pgtoText}</td></tr>`; 
+                return `<tr style="${rowStyle}"><td style="text-align: center;"><input type="checkbox" class="check-acerto" value="${v.id}" onchange="highlightRow(this)"></td><td><b>#${formatId(v.id)}</b></td><td>${v.cliente}</td><td style="${isVencido ? 'color: red; font-weight: bold;' : ''}">${v.vencimento.split('-').reverse().join('/')}</td><td><b>R$ ${formatCurrency(v.total)}</b>${faltaTxt}</td><td>${statusBadge}</td><td>${pgtoText}</td></tr>`; 
             }).join('');
         }
 
@@ -730,7 +733,7 @@
             });
             linhas.sort((a, b) => new Date(b.dataIso) - new Date(a.dataIso));
             if(linhas.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #666;">Nenhum registro de pagamento encontrado.</td></tr>`; return; }
-            tbody.innerHTML = linhas.map(l => { const dateObj = new Date(l.dataIso); const dataFormatada = dateObj.toLocaleDateString('pt-BR'); const horaFormatada = dateObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); return `<tr><td><b>${dataFormatada}</b> <span style="color:#888; font-size:0.8rem">${horaFormatada}</span></td><td>#${l.vendaId}</td><td>${l.cliente}</td><td><span style="color: #059669; font-weight: bold;">${l.metodo}</span></td><td><b>R$ ${formatCurrency(l.valor)}</b></td><td><button class="btn btn-ghost" onclick="cancelarBaixaIndividual(${l.vendaId})" style="padding:4px 8px; font-size:0.85rem; color: var(--danger); border-color: var(--danger);">❌ Desfazer</button></td></tr>`; }).join('');
+            tbody.innerHTML = linhas.map(l => { const dateObj = new Date(l.dataIso); const dataFormatada = dateObj.toLocaleDateString('pt-BR'); const horaFormatada = dateObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); return `<tr><td><b>${dataFormatada}</b> <span style="color:#888; font-size:0.8rem">${horaFormatada}</span></td><td><b>#${formatId(l.vendaId)}</b></td><td>${l.cliente}</td><td><span style="color: #059669; font-weight: bold;">${l.metodo}</span></td><td><b>R$ ${formatCurrency(l.valor)}</b></td><td><button class="btn btn-ghost" onclick="cancelarBaixaIndividual(${l.vendaId})" style="padding:4px 8px; font-size:0.85rem; color: var(--danger); border-color: var(--danger);">❌ Desfazer</button></td></tr>`; }).join('');
         }
 
         // --- RELATÓRIO A4 ACERTO DE CONTAS ---
@@ -778,7 +781,7 @@
                 totalFalta += restante;
 
                 html += `<tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 10px;"><b>#${v.id}</b></td>
+                    <td style="padding: 10px;"><b>#${formatId(v.id)}</b></td>
                     <td style="padding: 10px;">${v.cliente}</td>
                     <td style="padding: 10px; color: ${isVencido ? 'red' : 'black'};">${v.vencimento.split('-').reverse().join('/')}</td>
                     <td style="padding: 10px;">${statusTxt}</td>
@@ -805,7 +808,7 @@
         function abrirModalBaixa() { 
             const checks = document.querySelectorAll('.check-acerto:checked'); if(checks.length === 0) return alert("Selecione pelo menos uma conta pendente para dar baixa."); 
             let listaHtml = '<ul style="list-style: none; padding: 0; margin: 0;">'; let totalFalta = 0; let jaPagas = 0; 
-            checks.forEach(cb => { const id = parseInt(cb.value); const v = db.vendas.find(v => v.id === id); if(v) { if(!v.pagamento.startsWith('Acertado')) { let restante = v.total - (v.valorPago || 0); totalFalta += restante; listaHtml += `<li style="padding: 8px 5px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 0.9rem;"><span><b>#${v.id}</b> - ${v.cliente}</span><b>R$ ${formatCurrency(restante)}</b></li>`; } else { jaPagas++; } } }); listaHtml += '</ul>'; 
+            checks.forEach(cb => { const id = parseInt(cb.value); const v = db.vendas.find(v => v.id === id); if(v) { if(!v.pagamento.startsWith('Acertado')) { let restante = v.total - (v.valorPago || 0); totalFalta += restante; listaHtml += `<li style="padding: 8px 5px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 0.9rem;"><span><b>#${formatId(v.id)}</b> - ${v.cliente}</span><b>R$ ${formatCurrency(restante)}</b></li>`; } else { jaPagas++; } } }); listaHtml += '</ul>'; 
             if(totalFalta === 0 && jaPagas > 0) return alert("As contas selecionadas já estão pagas!"); 
             document.getElementById('lista-baixa').innerHTML = listaHtml; document.getElementById('total-baixa-txt').innerText = `R$ ${formatCurrency(totalFalta)}`; 
             if(checks.length === 1 && totalFalta > 0) { document.getElementById('div-baixa-parcial').style.display = 'block'; document.getElementById('v-baixa-valor').value = totalFalta.toFixed(2); } else { document.getElementById('div-baixa-parcial').style.display = 'none'; }
@@ -969,7 +972,7 @@
             document.getElementById('div-alerta-credito').style.display = 'none'; 
             
             renderizarCarrinhoNaTela(); renderizarPagamentosVenda();
-            document.getElementById('modal-title-venda').innerText = "Editar Venda #" + v.id; document.getElementById('btn-save-venda').innerText = "SALVAR ALTERAÇÕES (F11)"; 
+            document.getElementById('modal-title-venda').innerText = "Editar Venda #" + formatId(v.id); document.getElementById('btn-save-venda').innerText = "SALVAR ALTERAÇÕES (F11)"; 
             document.getElementById('modal-venda').style.display = 'flex'; setTimeout(() => { document.getElementById('v-vendedor').focus(); }, 100);
         }
 
@@ -1035,7 +1038,8 @@
                     db.vendas[index] = { ...db.vendas[index], ...baseData }; alert("Venda atualizada!"); 
                 }
             } else {
-                const novaVenda = { id: db.vendas.length > 0 ? Math.max(...db.vendas.map(v => v.id)) + 1 : 1000, data: new Date().toISOString(), valorPago: valorPagoRealmente, valorPagoOriginal: valorPagoRealmente, pagamentosOriginal: pgtoString, historicoPgto: [], ...baseData };
+                // AQUI FOI ALTERADO: Agora começa do 1 em vez de 1000
+                const novaVenda = { id: db.vendas.length > 0 ? Math.max(...db.vendas.map(v => v.id)) + 1 : 1, data: new Date().toISOString(), valorPago: valorPagoRealmente, valorPagoOriginal: valorPagoRealmente, pagamentosOriginal: pgtoString, historicoPgto: [], ...baseData };
                 db.vendas.push(novaVenda); vId = novaVenda.id;
             }
 
