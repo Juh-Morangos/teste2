@@ -3,27 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Vendas Pro v10.3 - Tabelas com Rolagem Interna</title>
+    <title>Sistema de Vendas Pro v10.4 - Layout Congelado (Desktop App)</title>
     <style>
         :root { --primary: #2563eb; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f3f4f6; --text: #1f2937; --info: #0ea5e9; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background-color: var(--bg); color: var(--text); }
         
-        header { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 10px; }
+        /* 1. Trava a rolagem geral da página. A altura é 100% do monitor */
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background-color: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* O cabeçalho não encolhe */
+        header { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 100; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
         nav { display: flex; flex-wrap: wrap; gap: 5px; }
         nav button { background: none; border: none; color: white; font-size: 0.9rem; cursor: pointer; padding: 0.6rem 1rem; border-radius: 6px; transition: 0.2s; }
         nav button:hover { background: rgba(255,255,255,0.15); }
         nav button.active-nav { background: rgba(255,255,255,0.25); font-weight: bold; }
         
-        .container { padding: 1.5rem; max-width: 1300px; margin: 0 auto; }
-        .page { display: none; }
-        .page.active { display: block; }
+        /* O container principal ocupa o resto do espaço e organiza as páginas */
+        .container { padding: 1.5rem; max-width: 1300px; margin: 0 auto; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
         
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        /* Os cards superiores não encolhem */
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; flex-shrink: 0; }
         .dash-card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
         .dash-card h4 { margin: 0; font-size: 0.8rem; color: #6b7280; text-transform: uppercase; }
         .dash-card .value { font-size: 1.5rem; font-weight: bold; margin-top: 0.5rem; display: block; }
 
-        .card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 1rem; }
+        /* As páginas ativas ocupam o espaço restante e escondem o que vaza */
+        .page { display: none; flex-direction: column; flex-grow: 1; overflow: hidden; }
+        .page.active { display: flex; }
+        
+        /* Card padrão (para forms no topo que não encolhem) */
+        .card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 1rem; flex-shrink: 0; }
+        
+        /* NOVO: Card Expansivo (para abrigar as tabelas dinâmicas) */
+        .card-table-container { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; margin-bottom: 1rem; }
+        .top-controls { flex-shrink: 0; } /* Protege os filtros para não sumirem */
+
+        /* A Rolagem Mágica da Tabela */
+        .table-wrapper { flex-grow: 1; overflow-y: auto; overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 8px; background: white; min-height: 150px; }
+        .table-wrapper table { width: 100%; border-collapse: collapse; margin: 0; }
+        .table-wrapper th, .table-wrapper td { padding: 0.9rem; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+        .table-wrapper th { background: #f9fafb; font-weight: 600; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); }
+        
         .form-row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: flex-end; }
         .form-group { flex: 1; display: flex; flex-direction: column; min-width: 120px; }
         label { margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem; }
@@ -41,28 +60,6 @@
         .btn-ghost { background: #e5e7eb; color: var(--text); border: 1px solid #d1d5db; }
         .btn-outline { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
         .btn-outline.active { background: var(--primary); color: white; }
-
-        /* Estilos de Tabela com Rolagem (Tabela Fixa) */
-        .table-wrapper {
-            max-height: 55vh; /* Define a altura máxima como 55% da tela */
-            overflow-y: auto; /* Cria a barra de rolagem vertical */
-            overflow-x: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            background: white;
-        }
-        .table-wrapper table { width: 100%; border-collapse: collapse; margin: 0; }
-        .table-wrapper th, .table-wrapper td { padding: 0.9rem; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
-        
-        /* O "Truque" para congelar o cabeçalho */
-        .table-wrapper th { 
-            background: #f9fafb; 
-            font-weight: 600; 
-            position: sticky; 
-            top: 0; 
-            z-index: 10; 
-            box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); 
-        }
         
         .selected-row { background-color: #dbeafe !important; transition: background-color 0.2s; }
         
@@ -74,10 +71,9 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
         .modal { background: white; padding: 2rem; border-radius: 12px; width: 95%; max-width: 900px; max-height: 90vh; overflow-y: auto; }
         
-        .cart-table th, .cart-table td { padding: 0.5rem; font-size: 0.85rem; border-bottom: 1px solid #e5e7eb; }
-        .cart-table { margin-top: 1rem; border: 1px solid #e5e7eb; }
-        /* Corrige o header do carrinho para não conflitar com a classe geral */
-        .cart-table th { position: static; box-shadow: none; background: white; border-bottom: 2px solid #e2e8f0; }
+        .cart-table { margin-top: 1rem; border: 1px solid #e5e7eb; width: 100%; border-collapse: collapse; }
+        .cart-table th, .cart-table td { padding: 0.5rem; font-size: 0.85rem; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        .cart-table th { background: white; font-weight: bold; position: static; box-shadow: none; border-bottom: 2px solid #e2e8f0; }
 
         .tab-container { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 1.5rem; }
         .tab-btn { background: transparent; border: none; padding: 10px 20px; font-size: 1rem; font-weight: bold; color: #64748b; cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; }
@@ -86,6 +82,8 @@
 
         @media screen { #receipt-print { display: none; } }
         @media print {
+            /* Desliga o layout flexbox rígido para a impressão em PDF fluir naturalmente */
+            body, .container, .page, .card-table-container, .table-wrapper, #view-pendentes, #view-historico { height: auto !important; overflow: visible !important; display: block !important; }
             body * { visibility: hidden; }
             .no-print { display: none !important; }
             #receipt-print, #receipt-print * { visibility: visible; }
@@ -114,32 +112,34 @@
         </div>
 
         <section id="home" class="page active">
-            <div class="card" style="padding-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
-                    <h3 style="margin:0">Vendas</h3>
-                    <div style="display:flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                        <div style="display: flex; gap: 5px; background: #f8fafc; padding: 5px 8px; border-radius: 6px; border: 1px solid #cbd5e1; align-items: center;">
-                            <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; margin-right: 5px;">AÇÕES:</span>
-                            <button class="btn btn-ghost" onclick="imprimirSelecionados('cliente')" style="padding:4px 8px; font-size:1.1rem; background:white;" title="Via do Cliente (Com Preço)">🖨️👤</button>
-                            <button class="btn btn-ghost" onclick="imprimirSelecionados('carregador')" style="padding:4px 8px; font-size:1.1rem; background:white;" title="Via do Carregador (Sem Preço)">🖨️📦</button>
-                            <button class="btn btn-info" onclick="editarSelecionado()" style="padding:4px 8px; font-size:1.1rem;" title="Editar Venda">✏️</button>
-                            <button class="btn btn-danger" onclick="cancelarSelecionados()" style="padding:4px 8px; font-size:1.1rem;" title="Cancelar Venda">❌</button>
+            <div class="card-table-container">
+                <div class="top-controls">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="margin:0">Vendas</h3>
+                        <div style="display:flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                            <div style="display: flex; gap: 5px; background: #f8fafc; padding: 5px 8px; border-radius: 6px; border: 1px solid #cbd5e1; align-items: center;">
+                                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; margin-right: 5px;">AÇÕES:</span>
+                                <button class="btn btn-ghost" onclick="imprimirSelecionados('cliente')" style="padding:4px 8px; font-size:1.1rem; background:white;" title="Via do Cliente (Com Preço)">🖨️👤</button>
+                                <button class="btn btn-ghost" onclick="imprimirSelecionados('carregador')" style="padding:4px 8px; font-size:1.1rem; background:white;" title="Via do Carregador (Sem Preço)">🖨️📦</button>
+                                <button class="btn btn-info" onclick="editarSelecionado()" style="padding:4px 8px; font-size:1.1rem;" title="Editar Venda">✏️</button>
+                                <button class="btn btn-danger" onclick="cancelarSelecionados()" style="padding:4px 8px; font-size:1.1rem;" title="Cancelar Venda">❌</button>
+                            </div>
+                            <div style="border-left: 1px solid #cbd5e1; height: 30px; margin: 0 5px;"></div>
+                            <button class="btn btn-ghost" onclick="abrirModalImpressaoAgrupada()">🖨️ Relatório Lote</button>
+                            <button id="btn-toggle-canceladas" class="btn btn-outline" onclick="toggleCanceladas()">Ver Canceladas</button>
+                            <button class="btn btn-success" onclick="openSaleModal()">+ Nova Venda (F1)</button>
                         </div>
-                        <div style="border-left: 1px solid #cbd5e1; height: 30px; margin: 0 5px;"></div>
-                        <button class="btn btn-ghost" onclick="abrirModalImpressaoAgrupada()">🖨️ Relatório Lote</button>
-                        <button id="btn-toggle-canceladas" class="btn btn-outline" onclick="toggleCanceladas()">Ver Canceladas</button>
-                        <button class="btn btn-success" onclick="openSaleModal()">+ Nova Venda (F1)</button>
+                    </div>
+
+                    <div class="form-row" style="margin-bottom: 1rem;">
+                        <div class="form-group"><label>De:</label><input type="date" id="f-inicio" onchange="renderSales()"></div>
+                        <div class="form-group"><label>Até:</label><input type="date" id="f-fim" onchange="renderSales()"></div>
+                        <div class="form-group"><label>Vendedor:</label><select id="f-vendedor" onchange="renderSales()"><option value="">Todos</option></select></div>
+                        <div class="form-group"><label>Pagamento:</label><input type="text" id="f-pgto" placeholder="Filtrar por meio de pgto..." onkeyup="renderSales()"></div>
+                        <div class="form-group"><label>Pesquisar:</label><input type="text" id="f-busca" placeholder="Cliente ou Nº" onkeyup="renderSales()"></div>
                     </div>
                 </div>
 
-                <div class="form-row" style="margin-bottom: 1rem;">
-                    <div class="form-group"><label>De:</label><input type="date" id="f-inicio" onchange="renderSales()"></div>
-                    <div class="form-group"><label>Até:</label><input type="date" id="f-fim" onchange="renderSales()"></div>
-                    <div class="form-group"><label>Vendedor:</label><select id="f-vendedor" onchange="renderSales()"><option value="">Todos</option></select></div>
-                    <div class="form-group"><label>Pagamento:</label><input type="text" id="f-pgto" placeholder="Filtrar por meio de pgto..." onkeyup="renderSales()"></div>
-                    <div class="form-group"><label>Pesquisar:</label><input type="text" id="f-busca" placeholder="Cliente ou Nº" onkeyup="renderSales()"></div>
-                </div>
-                
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -162,10 +162,10 @@
 
         <section id="produtos" class="page">
             <div class="card">
-                <h3>Cadastro de Produtos</h3>
+                <h3 style="margin-top: 0;">Cadastro de Produtos</h3>
                 <form id="form-produto" onsubmit="saveProduct(event)">
                     <input type="hidden" id="p-id-edit">
-                    <div class="form-row">
+                    <div class="form-row" style="margin-bottom: 0;">
                         <div class="form-group" style="max-width: 120px;"><label>Código</label><input type="number" id="p-codigo" required placeholder="Ex: 3"></div>
                         <div class="form-group" style="flex:2"><label>Nome do Produto</label><input type="text" id="p-nome" required></div>
                         <div class="form-group"><label>Medida</label><select id="p-unidade"><option value="Unid">Unidade</option><option value="Cx">Caixa</option><option value="Kg">Kg</option><option value="M">Metro</option><option value="L">Litro</option></select></div>
@@ -174,7 +174,11 @@
                     </div>
                 </form>
             </div>
-            <div class="table-wrapper"><table><thead><tr><th>Código</th><th>Produto</th><th>Medida</th><th>Preço</th><th>Ações</th></tr></thead><tbody id="prod-table-body"></tbody></table></div>
+            <div class="card-table-container">
+                <div class="table-wrapper">
+                    <table><thead><tr><th>Código</th><th>Produto</th><th>Medida</th><th>Preço</th><th>Ações</th></tr></thead><tbody id="prod-table-body"></tbody></table>
+                </div>
+            </div>
         </section>
 
         <section id="clientes" class="page">
@@ -185,7 +189,7 @@
                 </div>
                 <form id="form-cliente" onsubmit="saveClient(event)">
                     <input type="hidden" id="c-id-edit">
-                    <div class="form-row">
+                    <div class="form-row" style="margin-bottom: 0;">
                         <div class="form-group" style="max-width: 120px;"><label>Código</label><input type="number" id="c-codigo" required placeholder="Ex: 10"></div>
                         <div class="form-group" style="flex:2"><label>Nome Completo</label><input type="text" id="c-nome" required></div>
                         <div class="form-group"><label>Prazo Padrão (Dias)</label><input type="number" id="c-prazo" value="30"></div>
@@ -193,58 +197,69 @@
                     </div>
                 </form>
             </div>
-            <div class="table-wrapper"><table><thead><tr><th>Código</th><th>Nome</th><th>Prazo Padrão</th><th>Saldo (Crédito)</th><th>Ações</th></tr></thead><tbody id="cli-table-body"></tbody></table></div>
+            <div class="card-table-container">
+                <div class="table-wrapper">
+                    <table><thead><tr><th>Código</th><th>Nome</th><th>Prazo Padrão</th><th>Saldo (Crédito)</th><th>Ações</th></tr></thead><tbody id="cli-table-body"></tbody></table>
+                </div>
+            </div>
         </section>
 
         <section id="vendedores" class="page">
             <div class="card">
-                <h3>Cadastro de Vendedores</h3>
+                <h3 style="margin-top: 0;">Cadastro de Vendedores</h3>
                 <form id="form-vendedor" onsubmit="saveVendedor(event)">
                     <input type="hidden" id="vend-id-edit">
-                    <div class="form-row">
+                    <div class="form-row" style="margin-bottom: 0;">
                         <div class="form-group" style="max-width: 120px;"><label>Código</label><input type="number" id="vend-codigo" required placeholder="Ex: 1"></div>
                         <div class="form-group" style="flex:2"><label>Nome do Vendedor</label><input type="text" id="vend-nome" required></div>
                         <div class="form-group" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary" id="btn-vend-save">Salvar Vendedor</button></div>
                     </div>
                 </form>
             </div>
-            <div class="table-wrapper"><table><thead><tr><th>Código</th><th>Nome</th><th>Ações</th></tr></thead><tbody id="vend-table-body"></tbody></table></div>
+            <div class="card-table-container">
+                <div class="table-wrapper">
+                    <table><thead><tr><th>Código</th><th>Nome</th><th>Ações</th></tr></thead><tbody id="vend-table-body"></tbody></table>
+                </div>
+            </div>
         </section>
 
         <section id="acerto" class="page">
-            <div class="card">
-                <div class="tab-container">
+            <div class="card-table-container">
+                <div class="top-controls tab-container">
                     <button class="tab-btn active-tab" id="btn-tab-pendentes" onclick="switchAcertoTab('pendentes')">📋 Contas a Receber</button>
                     <button class="tab-btn" id="btn-tab-historico" onclick="switchAcertoTab('historico')">📑 Registro de Acertos (Baixas)</button>
                 </div>
 
-                <div id="view-pendentes">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <h3 style="margin:0">Contas Pendentes</h3>
-                            <p style="font-size: 0.85rem; color: #666; margin-top: 5px; margin-bottom: 0;">Selecione as contas para fechar o pagamento.</p>
-                        </div>
-                        <div style="display:flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                            <div style="display: flex; gap: 5px; background: #f8fafc; padding: 5px 8px; border-radius: 6px; border: 1px solid #cbd5e1; align-items: center;">
-                                <button class="btn btn-success" onclick="abrirModalBaixa()" style="padding:4px 8px; font-size:0.9rem;" title="Dar Baixa nos selecionados">💰 Realizar Baixa</button>
-                                <button class="btn btn-ghost" onclick="cancelarBaixaSelecionados()" style="padding:4px 8px; font-size:0.9rem; color: var(--danger); border-color: var(--danger);" title="Desfazer Baixa dos selecionados">↩️ Desfazer</button>
+                <div id="view-pendentes" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
+                    <div class="top-controls">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 style="margin:0">Contas Pendentes</h3>
+                                <p style="font-size: 0.85rem; color: #666; margin-top: 5px; margin-bottom: 0;">Selecione as contas para fechar o pagamento.</p>
                             </div>
-                            <button class="btn btn-ghost" onclick="imprimirRelatorioAcerto()">🖨️ Imprimir A4 / PDF</button>
+                            <div style="display:flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                                <div style="display: flex; gap: 5px; background: #f8fafc; padding: 5px 8px; border-radius: 6px; border: 1px solid #cbd5e1; align-items: center;">
+                                    <button class="btn btn-success" onclick="abrirModalBaixa()" style="padding:4px 8px; font-size:0.9rem;" title="Dar Baixa nos selecionados">💰 Realizar Baixa</button>
+                                    <button class="btn btn-ghost" onclick="cancelarBaixaSelecionados()" style="padding:4px 8px; font-size:0.9rem; color: var(--danger); border-color: var(--danger);" title="Desfazer Baixa dos selecionados">↩️ Desfazer</button>
+                                </div>
+                                <button class="btn btn-ghost" onclick="imprimirRelatorioAcerto()">🖨️ Imprimir A4 / PDF</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                            <div class="form-group"><label>Vencimento De:</label><input type="date" id="f-acerto-inicio" onchange="renderAcerto()"></div>
+                            <div class="form-group"><label>Até:</label><input type="date" id="f-acerto-fim" onchange="renderAcerto()"></div>
+                            <div class="form-group" style="flex:2"><label>Pesquisar Cliente:</label><input type="text" id="f-acerto-busca" placeholder="Digite o nome..." onkeyup="renderAcerto()"></div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-outline active" onclick="setFiltroAcerto('Todos')" id="f-acerto-Todos">Todos</button>
+                            <button class="btn btn-outline" onclick="setFiltroAcerto('A Vencer')" id="f-acerto-A Vencer">A Vencer</button>
+                            <button class="btn btn-outline" onclick="setFiltroAcerto('Vencidos')" id="f-acerto-Vencidos">Vencidos</button>
+                            <button class="btn btn-outline" onclick="setFiltroAcerto('Pagas')" id="f-acerto-Pagas">Pagas (Baixadas)</button>
                         </div>
                     </div>
                     
-                    <div class="form-row" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                        <div class="form-group"><label>Vencimento De:</label><input type="date" id="f-acerto-inicio" onchange="renderAcerto()"></div>
-                        <div class="form-group"><label>Até:</label><input type="date" id="f-acerto-fim" onchange="renderAcerto()"></div>
-                        <div class="form-group" style="flex:2"><label>Pesquisar Cliente:</label><input type="text" id="f-acerto-busca" placeholder="Digite o nome..." onkeyup="renderAcerto()"></div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                        <button class="btn btn-outline active" onclick="setFiltroAcerto('Todos')" id="f-acerto-Todos">Todos</button>
-                        <button class="btn btn-outline" onclick="setFiltroAcerto('A Vencer')" id="f-acerto-A Vencer">A Vencer</button>
-                        <button class="btn btn-outline" onclick="setFiltroAcerto('Vencidos')" id="f-acerto-Vencidos">Vencidos</button>
-                        <button class="btn btn-outline" onclick="setFiltroAcerto('Pagas')" id="f-acerto-Pagas">Pagas (Baixadas)</button>
-                    </div>
                     <div class="table-wrapper">
                         <table>
                             <thead><tr>
@@ -261,18 +276,20 @@
                     </div>
                 </div>
 
-                <div id="view-historico" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <h3 style="margin:0">Registro de Acerto de Contas</h3>
-                            <p style="font-size: 0.85rem; color: #666; margin-top: 5px; margin-bottom: 0;">Histórico financeiro das contas que foram baixadas (pagas).</p>
+                <div id="view-historico" style="display: none; flex-direction: column; flex-grow: 1; overflow: hidden;">
+                    <div class="top-controls">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 style="margin:0">Registro de Acerto de Contas</h3>
+                                <p style="font-size: 0.85rem; color: #666; margin-top: 5px; margin-bottom: 0;">Histórico financeiro das contas que foram baixadas (pagas).</p>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-row" style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 1.5rem;">
-                        <div class="form-group"><label>Data da Baixa De:</label><input type="date" id="f-hist-inicio" onchange="renderHistorico()"></div>
-                        <div class="form-group"><label>Até:</label><input type="date" id="f-hist-fim" onchange="renderHistorico()"></div>
-                        <div class="form-group" style="flex:2"><label>Pesquisar Cliente:</label><input type="text" id="f-hist-busca" placeholder="Digite o nome..." onkeyup="renderHistorico()"></div>
+                        
+                        <div class="form-row" style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 1.5rem;">
+                            <div class="form-group"><label>Data da Baixa De:</label><input type="date" id="f-hist-inicio" onchange="renderHistorico()"></div>
+                            <div class="form-group"><label>Até:</label><input type="date" id="f-hist-fim" onchange="renderHistorico()"></div>
+                            <div class="form-group" style="flex:2"><label>Pesquisar Cliente:</label><input type="text" id="f-hist-busca" placeholder="Digite o nome..." onkeyup="renderHistorico()"></div>
+                        </div>
                     </div>
 
                     <div class="table-wrapper">
@@ -339,7 +356,7 @@
                         </div>
                     </div>
                     <table class="cart-table" id="tabela-carrinho" style="display: none;">
-                        <thead style="background: white;">
+                        <thead>
                             <tr><th>Código</th><th>Produto</th><th>Qtd</th><th>Valor Unit.</th><th>Total Item</th><th style="text-align: center;">Remover</th></tr>
                         </thead>
                         <tbody id="cart-table-body" style="background: white;"></tbody>
@@ -378,7 +395,7 @@
                     
                     <div id="div-cheque" class="hidden form-row" style="margin-top: -10px; margin-bottom: 15px;"><div class="form-group"><input type="text" id="v-cheque-info" placeholder="Info do Cheque (Ex: Banco do Brasil, Nº 123456)"></div></div>
 
-                    <table class="cart-table" id="tabela-pagamentos" style="display: none; background: white;">
+                    <table class="cart-table" id="tabela-pagamentos" style="display: none;">
                         <thead>
                             <tr style="background: #f8fafc;"><th>Método Lançado</th><th>Valor (R$)</th><th>Detalhes</th><th style="text-align: center;">Excluir</th></tr>
                         </thead>
@@ -611,9 +628,7 @@
             document.getElementById('modal-impressao-agrupada').style.display = 'flex';
         }
 
-        function fecharModalImpressaoAgrupada() {
-            document.getElementById('modal-impressao-agrupada').style.display = 'none';
-        }
+        function fecharModalImpressaoAgrupada() { document.getElementById('modal-impressao-agrupada').style.display = 'none'; }
 
         function confirmarImpressaoAgrupada() {
             document.getElementById('receipt-print').style.width = '100%';
@@ -668,7 +683,25 @@
         }
 
         // --- SISTEMA DE ACERTO DE CONTAS ---
-        function switchAcertoTab(tab) { document.getElementById('btn-tab-pendentes').classList.remove('active-tab'); document.getElementById('btn-tab-historico').classList.remove('active-tab'); document.getElementById('view-pendentes').style.display = 'none'; document.getElementById('view-historico').style.display = 'none'; if(tab === 'pendentes') { document.getElementById('btn-tab-pendentes').classList.add('active-tab'); document.getElementById('view-pendentes').style.display = 'block'; renderAcerto(); } else { document.getElementById('btn-tab-historico').classList.add('active-tab'); document.getElementById('view-historico').style.display = 'block'; const hoje = new Date().toISOString().split('T')[0]; if(!document.getElementById('f-hist-inicio').value) { document.getElementById('f-hist-inicio').value = hoje; document.getElementById('f-hist-fim').value = hoje; } renderHistorico(); } }
+        function switchAcertoTab(tab) { 
+            document.getElementById('btn-tab-pendentes').classList.remove('active-tab'); 
+            document.getElementById('btn-tab-historico').classList.remove('active-tab'); 
+            document.getElementById('view-pendentes').style.display = 'none'; 
+            document.getElementById('view-historico').style.display = 'none'; 
+            
+            if(tab === 'pendentes') { 
+                document.getElementById('btn-tab-pendentes').classList.add('active-tab'); 
+                document.getElementById('view-pendentes').style.display = 'flex'; // Modificado para o layout app
+                renderAcerto(); 
+            } else { 
+                document.getElementById('btn-tab-historico').classList.add('active-tab'); 
+                document.getElementById('view-historico').style.display = 'flex'; // Modificado para o layout app
+                const hoje = new Date().toISOString().split('T')[0]; 
+                if(!document.getElementById('f-hist-inicio').value) { document.getElementById('f-hist-inicio').value = hoje; document.getElementById('f-hist-fim').value = hoje; } 
+                renderHistorico(); 
+            } 
+        }
+        
         function setFiltroAcerto(filtro) { filtroAcertoAtual = filtro; ['Todos', 'A Vencer', 'Vencidos', 'Pagas'].forEach(f => document.getElementById(`f-acerto-${f}`).classList.remove('active')); document.getElementById(`f-acerto-${filtro}`).classList.add('active'); renderAcerto(); }
         
         function renderAcerto() {
@@ -799,7 +832,6 @@
         function desfazerBaixaLogica(idArray) { let desfeitas = 0; idArray.forEach(id => { const v = db.vendas.find(v => v.id === id); if(v && (v.pagamento.startsWith('Acertado') || (v.valorPago > 0))) { v.pagamento = v.pagamentosOriginal || 'Prazo em Carteira'; v.dataBaixa = null; v.valorPago = v.valorPagoOriginal || 0; v.historicoPgto = []; desfeitas++; } }); return desfeitas; }
         function cancelarBaixaSelecionados() { const checks = document.querySelectorAll('.check-acerto:checked'); if(checks.length === 0) return alert("Selecione."); if(confirm(`Desfazer?`)) { const ids = Array.from(checks).map(cb => parseInt(cb.value)); if(desfazerBaixaLogica(ids) > 0) { saveDB(); renderAcerto(); renderHistorico(); renderSales(); } } }
         function cancelarBaixaIndividual(id) { if(confirm(`DESFAZER PAGAMENTO?`)) { if(desfazerBaixaLogica([id]) > 0) { saveDB(); renderAcerto(); renderHistorico(); renderSales(); } } }
-
 
         // === NOVA CENTRAL DE PAGAMENTOS E CARRINHO ===
         function sugerirValorPgto() {
